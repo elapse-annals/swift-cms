@@ -29,20 +29,5 @@
     - 三方 CMS 对接同步
     - 全文搜索
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## 
-
-
-Infrastructure Framework Come From LaravelPlus
+Infrastructure Framework Come From [LaravelPlus](https://github.com/ElapseAnnals/LaravelPlus)
