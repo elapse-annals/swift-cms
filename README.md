@@ -11,7 +11,7 @@
 
 ## 进展
 - 查阅 octobercms 内容
-    - jquery 通信，twig 渲染模版（不喜不考虑借鉴）
+    - jquery 通信，twig 渲染模版（不考虑借鉴）
 
 ## Todo
 - 设计基础功能与结构
@@ -42,7 +42,7 @@
 
 
 
+## 
 
 
-
-Infrastructure Framework come from LaravelPlus
+Infrastructure Framework Come From LaravelPlus
