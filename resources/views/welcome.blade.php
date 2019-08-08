@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>Laravel</title>
+    <title>Laravel Plus</title>
 
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css?family=Nunito:200,600" rel="stylesheet">
@@ -100,7 +100,7 @@
         <br>
         <div v-cloak>
             <div>
-                <label for="show_components">Vue 组件展示：</label>
+                <label for="show_components">集成 Vue/Element UI 组件展示：</label>
                 <el-switch id="show_components"
                            v-model="show_components"
                            active-color="#13ce66"
@@ -108,18 +108,18 @@
                 </el-switch>
                 <div v-show="show_components">
                     <example-component></example-component>
-                    <el-button :plain="true" @click="open">@{{ alert_msg }}</el-button>
+                    <el-button plain @click="open">@{{ alert_msg }}</el-button>
                 </div>
             </div>
             <div>
-                <el-link href="temps" type="primary" target="_blank">temps 测试地址</el-link>
+                <el-link href="tmpls" type="primary" target="_blank">tmpls 测试地址</el-link>
             </div>
         </div>
     </div>
 </div>
 <script>
     var mixin = {
-        data: function () {
+        data() {
             return {
                 show_components: false,
                 alert_msg: '打开消息提示'

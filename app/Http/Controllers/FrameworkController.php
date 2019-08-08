@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Route;
 
 /**
  * Class FrameworkController
@@ -22,6 +23,18 @@ class FrameworkController extends Controller
      */
     private $framework_name;
     /**
+     * @var string
+     */
+    private $framework_name_plural;
+    /**
+     * @var string
+     */
+    private $framework_name_low;
+    /**
+     * @var string
+     */
+    private $framework_name_low_plural;
+    /**
      * @var
      */
     private $file_path;
@@ -35,6 +48,9 @@ class FrameworkController extends Controller
     {
         parent::__construct();
         $this->framework_name = ucfirst($framework_name);
+        $this->framework_name_plural = Str::plural($this->framework_name);
+        $this->framework_name_low = strtolower($this->framework_name);
+        $this->framework_name_low_plural = Str::plural($this->framework_name_low);
     }
 
     /**
@@ -53,6 +69,7 @@ class FrameworkController extends Controller
             case 'Presenter':
             case 'Transformer':
             case 'Formatter':
+            case 'Export':
                 $this->file_path = $framework_file_type . 's';
                 break;
         }
@@ -122,38 +139,34 @@ class FrameworkController extends Controller
                 $resource_type = 'resource';
         }
         $route_web_path = base_path("routes/{$route_type}.php");
-        $framework_name_low = Str::plural(strtolower($this->framework_name));
-        $route_string = "Route::{$resource_type}('{$framework_name_low}', '{$this->framework_name}Controller');";
+        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}', '{$this->framework_name}Controller');";
         $file_get_contents = file_get_contents($route_web_path);
         $file_get_contents = str_replace($route_string, '', $file_get_contents);
         file_put_contents($route_web_path, $file_get_contents);
     }
 
     /**
-     * @todo  抽象替换函数
-     *
      * @param $framework_file_type
      *
      * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @todo  抽象替换函数
      */
     public function create($framework_file_type): void
     {
         $framework_name_plural = Str::plural($this->framework_name);
         $Storage = Storage::disk('local');
         $body = $Storage->get("tmpl/framework/{$framework_file_type}.php");
-        $body = str_replace('Temps', $framework_name_plural, $body);
-        $body = str_replace('Temp', $this->framework_name, $body);
-        $framework_name_low = strtolower($this->framework_name);
-        $framework_name_low_plural = Str::plural($framework_name_low);
-        $body = str_replace('temps', $framework_name_low_plural, $body);
-        $body = str_replace('temp', $framework_name_low, $body);
+        $body = str_replace('Tmpls', $framework_name_plural, $body);
+        $body = str_replace('Tmpl', $this->framework_name, $body);
+        $body = str_replace('tmpls', $this->framework_name_low_plural, $body);
+        $body = str_replace('tmpl', $this->framework_name_low, $body);
         $file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
         if (!is_file($file)) {
             file_put_contents($file, $body);
         }
         if ('Controller' === $framework_file_type) {
             $tmpl_resources_directory = storage_path("app/tmpl/views");
-            $resources_directory = base_path("resources/views/{$framework_name_low}");
+            $resources_directory = base_path("resources/views/{$this->framework_name_low}");
             exec("cp -r {$tmpl_resources_directory} {$resources_directory}");
             $route_types = ['web', 'api'];
             foreach ($route_types as $route_type) {
@@ -164,8 +177,8 @@ class FrameworkController extends Controller
                 if (!in_array($framework_view_file, ['.', '..'])) {
                     $route_web_path = $resources_directory . '/' . $framework_view_file;
                     $file_get_contents = file_get_contents($route_web_path);
-                    $file_get_contents = str_replace('temps', $framework_name_low_plural, $file_get_contents);
-                    $file_get_contents = str_replace('temp', $framework_name_low, $file_get_contents);
+                    $file_get_contents = str_replace('tmpls', $this->framework_name_low_plural, $file_get_contents);
+                    $file_get_contents = str_replace('tmpl', $this->framework_name_low, $file_get_contents);
                     file_put_contents($route_web_path, $file_get_contents);
                 }
             }
@@ -187,8 +200,7 @@ class FrameworkController extends Controller
                 break;
         }
         $route_web_path = base_path("routes/{$route_type}.php");
-        $framework_name_low = Str::plural(strtolower($this->framework_name));
-        $route_string = "Route::{$resource_type}('{$framework_name_low}', '{$this->framework_name}Controller');";
+        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}', '{$this->framework_name}Controller');";
         file_put_contents($route_web_path, $route_string . PHP_EOL, FILE_APPEND);
     }
 }

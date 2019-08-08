@@ -11,19 +11,22 @@
 |
 */
 
+Auth::routes();
+
 Route::get('/', 'ClosureController@welcome');
+
+Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
 
 Route::get('plural/{singular}', 'StringPresenter@plural');
 
-Route::prefix('test')->group(function () {
-    Route::get('exception', 'testController@exception');
-    Route::any('test', 'testController@test');
+/**
+ * Export routing registration
+ */
+Route::prefix('export')->group(function () {
+    Route::get('tmpls', 'TmplController@export');
 });
 
-Route::resource('temps', 'TempController');
+Route::resource('tmpls', 'TmplController');
 
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');

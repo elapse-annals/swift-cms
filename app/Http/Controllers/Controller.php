@@ -7,15 +7,47 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
+/**
+ * Class Controller
+ *
+ * @package App\Http\Controllers
+ */
 class Controller extends BaseController
 {
     use AuthorizesRequests, DispatchesJobs, ValidatesRequests;
 
+    /**
+     * @var
+     */
     protected $service;
+    /**
+     *
+     */
     const ERROR_CODE = 500;
 
+    /**
+     * Controller constructor.
+     */
     public function __construct()
     {
+    }
+
+    /**
+     * @param null   $data
+     * @param string $message
+     * @param array  $page
+     *
+     * @return array
+     */
+    protected function successReturn($data = null, $message = 'success', $page = []): array
+    {
+        $arr = [
+            'code' => 200,
+            'msg'  => $message,
+            'data' => $data,
+            'page' => $page,
+        ];
+        return $arr;
     }
 
     /**
