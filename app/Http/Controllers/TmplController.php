@@ -40,10 +40,6 @@ class TmplController extends Controller
      * @var bool
      */
     private $enable_filter = true;
-    /**
-     * @var array
-     */
-    private $transformer_functions = ['index', 'show', 'edit'];
 
     /**
      * TmplController constructor.
@@ -78,16 +74,18 @@ class TmplController extends Controller
                 return $this->successReturn($tmpls, 'success', $this->formatter->assemblyPage($tmpls));
             }
             $table_comment_map = $this->getTableCommentMap();
-            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
-            $view_data = $this->filter(
-                [
-                    'info' => $this->getInfo(),
-                    'tmpls' => $tmpls,
-                    'list_map' => $table_comment_map,
-                    'search_map' => $table_comment_map,
-                ],
-                __FUNCTION__
-            );
+//            $table_comment_map = $this->appendAssociationModelMap($table_comment_map,[]);
+            $view_data = [
+                'info'       => $this->getInfo(),
+                'tmpls'      => $tmpls,
+                'list_map'   => $table_comment_map,
+                'search_map' => $table_comment_map,
+            ];
+            if ($this->enable_filter) {
+                $view_data = $this->transformer->transformIndex(
+                    $this->formatter->formatIndex($view_data)
+                );
+            }
             return view('tmpl.index', $view_data);
         } catch (Exception $exception) {
             return [$exception->getMessage(), $exception->getFile(), $exception->getLine()];
@@ -140,7 +138,7 @@ class TmplController extends Controller
     {
         $rules = [];
         $messages = [];
-        if (!empty($rules)) {
+        if (! empty($rules)) {
             $this->validate($data, $rules, $messages);
         }
     }
@@ -152,8 +150,8 @@ class TmplController extends Controller
     {
         try {
             $view_data = [
-                'info' => $this->getInfo(),
-                'js_data' => [
+                'info'        => $this->getInfo(),
+                'js_data'     => [
                     'data' => [],
                 ],
                 'detail_data' => $this->getTableCommentMap(),
@@ -165,8 +163,8 @@ class TmplController extends Controller
 
     /**
      * @param Request $request
-     * @param int $id
-     * @param bool $is_edit
+     * @param int     $id
+     * @param bool    $is_edit
      *
      * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
@@ -175,16 +173,18 @@ class TmplController extends Controller
         try {
             $this->validationShowRequest($id);
             $tmpl = $this->service->getIdInfo($id);
-            $view_data = $this->filter(
-                [
-                    'info' => $this->getInfo(),
-                    'js_data' => [
-                        'detail_data' => $tmpl,
-                    ],
-                    'detail_data' => $this->getTableCommentMap(),
+            $view_data = [
+                'info'        => $this->getInfo(),
+                'js_data'     => [
+                    'detail_data' => $tmpl,
                 ],
-                __FUNCTION__
-            );
+                'detail_data' => $this->getTableCommentMap(),
+            ];
+            if ($this->enable_filter) {
+                $view_data = $this->transformer->transformIndex(
+                    $this->formatter->formatIndex($view_data)
+                );
+            }
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
                 return $view_data;
             }
@@ -224,6 +224,7 @@ class TmplController extends Controller
             if ($request->is('api/*')) {
                 return $res_db;
             }
+            return $res_db;
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -290,63 +291,9 @@ class TmplController extends Controller
     {
         return [
             'description' => 'xxx',
-            'author' => 'Ben',
-            'title' => 'index title',
+            'author'      => 'Ben',
+            'title'       => 'index title',
         ];
-    }
-
-    /**
-     * @param string $table_name
-     * @param string $connection_name
-     *
-     * @return array
-     */
-    private function getTableCommentMap($table_name = null, $connection_name = 'mysql'): array
-    {
-        $table_maps = Cache::remember('map_Tmpls', 1,
-            function () use ($table_name, $connection_name) {
-                if (empty($table_name)) {
-                    $table_name = Str::plural(Str::snake('Tmpls'));
-                }
-                $table_column_dbs = DB::connection($connection_name)->select("show full columns from {$table_name}");
-                $table_columns = array_column($table_column_dbs, 'Comment', 'Field');
-                $filter_words = [
-                    'deleted_by',
-                    'deleted_at',
-                ];
-                foreach ($table_columns as $key => $table_column) {
-                    if (empty($table_column)) {
-                        $table_column = $key;
-                    }
-                    if (!in_array($key, $filter_words)) {
-                        $show_columns[] = [
-                            'prop' => $key,
-                            'label' => $table_column,
-                        ];
-                    }
-                }
-                return serialize($show_columns);
-            });
-        return unserialize($table_maps);
-    }
-
-    /**
-     * @param array $data
-     * @param string $controller_function
-     *
-     * @return array
-     * @todo 过度抽象
-     */
-    private function filter(array $data, string $controller_function): array
-    {
-        if ($this->enable_filter && in_array($controller_function, $this->transformer_functions)) {
-            $controller_plural = ucfirst($controller_function);
-            $formatterKey = 'format' . $controller_plural;
-            $transformKey = 'transform' . $controller_plural;
-            return $this->transformer->{$transformKey}(
-                $this->formatter->{$formatterKey}($data)
-            );
-        }
     }
 
     /**
@@ -367,31 +314,6 @@ class TmplController extends Controller
         return Excel::download(new TmplExport, $excel_name);
     }
 
-    /**
-     * @todo 根据 Model 反射生成关联模型
-     *
-     * @param array $table_comment_map
-     *
-     * @return array
-     */
-    private function appendAssociationModelMap(array $table_comment_map): array
-    {
-        array_push($table_comment_map, [
-            'prop' => 'info',
-            'label' => 'info',
-            'is_array' => true,
-            'child_map' => [
-                [
-                    'prop' => 'hobby',
-                    'label' => '爱好',
-                ],
-                [
-                    'prop' => 'created_at',
-                    'label' => '创建时间',
-                ],
-            ],
-        ]);
-        return $table_comment_map;
-    }
+
 
 }

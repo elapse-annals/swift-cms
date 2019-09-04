@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Presenters\ViewPresenter;
 use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -40,6 +41,11 @@ class FrameworkController extends Controller
     private $file_path;
 
     /**
+     * @var bool
+     */
+    private $is_static_render = false;
+
+    /**
      * FrameworkController constructor.
      *
      * @param $framework_name
@@ -51,6 +57,26 @@ class FrameworkController extends Controller
         $this->framework_name_plural = Str::plural($this->framework_name);
         $this->framework_name_low = strtolower($this->framework_name);
         $this->framework_name_low_plural = Str::plural($this->framework_name_low);
+    }
+
+    /**
+     * @param $framework_file_type
+     * @param $is_delete
+     * @param $is_static_render
+     *
+     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     */
+    public function handle($framework_file_type, $is_delete, $is_static_render)
+    {
+        $this->init($framework_file_type);
+        $this->is_static_render = $is_static_render;
+        $this->file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
+        if ($is_delete) {
+            $this->delete($framework_file_type);
+        } else {
+            $this->checkFileExistence($framework_file_type);
+            $this->create($framework_file_type);
+        }
     }
 
     /**
@@ -72,24 +98,6 @@ class FrameworkController extends Controller
             case 'Export':
                 $this->file_path = $framework_file_type . 's';
                 break;
-        }
-    }
-
-    /**
-     * @param $framework_file_type
-     * @param $is_delete
-     *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     */
-    public function handle($framework_file_type, $is_delete)
-    {
-        $this->init($framework_file_type);
-        $this->file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
-        if ($is_delete) {
-            $this->delete($framework_file_type);
-        } else {
-            $this->checkFileExistence($framework_file_type);
-            $this->create($framework_file_type);
         }
     }
 
@@ -122,7 +130,7 @@ class FrameworkController extends Controller
                 $this->deleteRoute($route_type);
             }
         }
-        usleep(100000);
+        usleep(10000);
     }
 
     /**
@@ -179,11 +187,78 @@ class FrameworkController extends Controller
                     $file_get_contents = file_get_contents($route_web_path);
                     $file_get_contents = str_replace('tmpls', $this->framework_name_low_plural, $file_get_contents);
                     $file_get_contents = str_replace('tmpl', $this->framework_name_low, $file_get_contents);
+                    $file_get_contents = $this->generateStaticView($framework_view_file, $file_get_contents);
                     file_put_contents($route_web_path, $file_get_contents);
                 }
             }
         }
-        usleep(100000);
+        usleep(10000);
+    }
+
+    /**
+     * @param $file_name
+     * @param $data
+     *
+     * @return mixed
+     */
+    private function generateStaticView($file_name, $data)
+    {
+        $replace_data = '';
+        switch ($file_name) {
+            case '_list.blade.php':
+                $replace_data = $this->generatelistView($data);
+                break;
+        }
+        $data = str_replace('%Placeholder%', $replace_data, $data);
+        return $data;
+    }
+
+    /**
+     * @param $data
+     *
+     * @return string
+     * @throws \ReflectionException
+     */
+    private function generatelistView($data)
+    {
+        $ViewPresenter = new ViewPresenter();
+        $list_map = [];
+        if ($this->is_static_render) {
+            $list_map = $this->getModelMap();
+        }
+        return $ViewPresenter->lists($list_map, $this->is_static_render);
+    }
+
+    /**
+     * @param array $list_map
+     *
+     * @return array
+     * @throws \ReflectionException
+     */
+    private function getModelMap(array $list_map = []): array
+    {
+        $ReflectionClass = new \ReflectionClass("\App\Models\{$this->framework_name}");
+        $list_map = $this->getTableCommentMap($this->framework_name);
+        $child_map_lists = $this->assemblyChildMapList($ReflectionClass->getMethods());
+        $this->appendAssociationModelMap($list_map, $child_map_lists);
+        return $list_map;
+    }
+
+    /**
+     * @param array $data
+     * @param array $child_map_lists
+     *
+     * @return array
+     */
+    private function assemblyChildMapList(array $data, array $child_map_lists = []): array
+    {
+        foreach ($data as $datum) {
+            $child_map_lists[] = [
+                'prop' => $datum,
+                'label' => $datum,
+            ];
+        }
+        return $child_map_lists;
     }
 
     /**

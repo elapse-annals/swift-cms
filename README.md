@@ -99,21 +99,24 @@ $ php artisan ide-helper:models //  生成模型辅助提示
 ```
 Tips:
 1. 兼容 laravel-plus 目录名
-2. Composer  加速工具 prestissimo 引入
-```php
-composer global require hirak/prestissimo
-```
-3. [Composer 镜像](https://learnku.com/composer/t/4484/composer-mirror-use-help)
 
-cnpkg
-```php
- $ composer config -g repos.packagist composer https://php.cnpkg.org
- ```
- 
+2. [Composer 镜像](https://learnku.com/composer/t/4484/composer-mirror-use-help)
+
  aliyun
  ```php
  $ composer config -g repo.packagist composer https://mirrors.aliyun.com/composer/
  ```
+ 
+cnpkg
+```php
+ $ composer config -g repos.packagist composer https://php.cnpkg.org
+ ```
+
+3. Composer  加速工具 prestissimo 引入
+```php
+$ composer global require hirak/prestissimo
+```
+ 
 
 
 <hr>
@@ -290,21 +293,26 @@ api token 维护使用 auth:api 中间件或 [barryvdh/laravel-cors](https://git
 - 增加默认加载软件包
     - production  生产环境
         - [respect/validation](https://github.com/Respect/Validation) 验证包
-        - [react/react](https://github.com/reactphp/react) ReactPHP 多进程异步扩展（可以移除）
+        - [react/react](https://github.com/reactphp/react) ReactPHP 多进程异步扩展（手动,引入后 Process 才可使用）
+            - react/child-process
+            - react/event-loop
         - 引入 ElasticSearch For scout
-            - [laravel/scout](https://github.com/laravel/scout) 
-            - [tamayo/laravel-scout-elastic](https://github.com/ErickTamayo/laravel-scout-elastic)
-             - [elastic/elasticsearch-php](https://github.com/elastic/elasticsearch-php) 原生 ElasticSearch (可选)
+            - [laravel/scout](https://github.com/laravel/scout) (手动)
+            - [tamayo/laravel-scout-elastic](https://github.com/ErickTamayo/laravel-scout-elastic)(手动)
+            
+             - [elastic/elasticsearch-php](https://github.com/elastic/elasticsearch-php) 原生 ElasticSearch (手动)
         - rabbitMQ 扩展
             - vladimir-yuldashev/laravel-queue-rabbitmq         
-            - php-amqplib/php-amqplib 原生（可选）
+            - php-amqplib/php-amqplib 原生(手动)
         - [rap2hpoutre/laravel-log-viewer](https://github.com/rap2hpoutre/laravel-log-viewer) 日志展示 [访问 host/logs] 
         - [predis/predis](https://github.com/nrk/predis) Redis 插件（建议使用 php-redis 扩展）
-        - [php-tool/laravel-plus-make](https://github.com/PHPTool/LaravelPlusMake) Laravel Plus Make 自动生成 framework 代码插件软件包（可单独引用）
+        - [php-tool/laravel-plus-make](https://github.com/PHPTool/LaravelPlusMake) Laravel Plus Make 自动生成 framework 代码插件软件包(手动)
         - [guzzlehttp/guzzle](https://github.com/guzzle/guzzle) Http 请求包
         - [overtrue/laravel-lang](https://github.com/overtrue/laravel-lang) 多语言本地化 i18n
-        - [doctrine/dbal](https://github.com/doctrine/dbal)   数据库抽象层
+        - [doctrine/dbal](https://github.com/doctrine/dbal)   数据库抽象层(手动)
         - [maatwebsite/excel](https://github.com/Maatwebsite/Laravel-Excel) 增加 excel 组件
+        - [laravel/socialite] () 社会化登陆包【注意配置代理或更改底层路由请求】
+             - 替代方案  [overtrue/socialite](https://github.com/overtrue/socialite) 包含国内社会化登陆
     - develop     开发环境
       - [reliese/laravel](https://github.com/reliese/laravel)         模型生成工具
       ```php
@@ -318,6 +326,8 @@ api token 维护使用 auth:api 中间件或 [barryvdh/laravel-cors](https://git
       - [nunomaduro/phpinsights](https://github.com/nunomaduro/phpinsights)          统计检测项目问题（类似 PHPCS,需求版本 php 7.2.* ，请手动安装 composer require nunomaduro/phpinsights --dev）
       - [nunomaduro/larastan]() 增加 laravel 静态检测工具
       - [infyomlabs/laravel-generator](https://github.com/InfyOmLabs/laravel-generator)     Code 代码生成工具（可选）
+      - [darkaonline/l5-swagger]() swagger 文档生成
+      - [mpociot/laravel-apidoc-generator]() api doc 文档生成
   
 -  增加前端资源
     - element-ui 样式框架（可选方案 iview）
@@ -351,8 +361,14 @@ api token 维护使用 auth:api 中间件或 [barryvdh/laravel-cors](https://git
 优化模板渲染与 API 接口一致性
 
 优化多模型关联
+- 关联创建
+- 关联修改
+
+增加动态生成视图
 
 增加多语言数据库，和迁移，自动更新功能
 
 简化介绍，完善 wiki
+
+更新 6.0 版本
 

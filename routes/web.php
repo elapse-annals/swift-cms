@@ -19,7 +19,13 @@ Route::get('/home', 'HomeController@index')->name('home');
 
 Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
 
-Route::get('plural/{singular}', 'StringPresenter@plural');
+//Route::get('plural/{singular}', 'StringService@plural');
+
+Route::prefix('login')->group(function () {
+    Route::get('google', 'Auth\LoginController@redirectToProvider');
+    Route::get('google/callback', 'Auth\LoginController@handleProviderCallback');
+});
+
 
 /**
  * Export routing registration
@@ -28,5 +34,16 @@ Route::prefix('export')->group(function () {
     Route::get('tmpls', 'TmplController@export');
 });
 
+
+
+Route::resource('languages', 'LanguageController');
+
 Route::resource('tmpls', 'TmplController');
+
+
+
+
+
+
+
 

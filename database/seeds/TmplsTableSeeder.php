@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Database\Seeder;
 use App\Models\Tmpl;
+use Illuminate\Database\Seeder;
 
 class TmplsTableSeeder extends Seeder
 {
