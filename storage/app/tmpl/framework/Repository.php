@@ -2,14 +2,15 @@
 
 namespace App\Repositories;
 
-use App\Models\Temp;
+use App\Models\Tmpl;
+use phpDocumentor\Reflection\Types\Object_;
 
 /**
- * Class TempRepository
+ * Class TmplRepository
  *
  * @package App\Presenters
  */
-class TempRepository extends Repository
+class TmplRepository extends Repository
 {
     /**
      * @var int
@@ -17,32 +18,40 @@ class TempRepository extends Repository
     public $per_page = 10;
 
     /**
-     * @return \Illuminate\Contracts\Pagination\LengthAwarePaginator
+     * if this model associate other models need ->with('')
+     *
+     * @param array $data
+     *
+     * @return mixed
      */
-    public function getList()
+    public function getList(array $data = [])
     {
-        return Temp::paginate($this->per_page);
+        $Tmpl = new Tmpl();
+        if (!empty($data)) {
+            $Tmpl = $this->assembvlyWhere($Tmpl, $data);
+        }
+        return $Tmpl->Paginate($this->per_page);
     }
 
     /**
      * @param $id
      *
-     * @return Temp|Temp[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null
+     * @return Tmpl|Tmpl[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null
      */
     public function find($id)
     {
-        return Temp::find($id);
+        return Tmpl::find($id);
     }
 
     public function create(array $save)
     {
-        return Temp::create($save);
+        return Tmpl::create($save);
     }
 
     /**
      * @param array $save
      *
-     * @return Temp|\Illuminate\Database\Eloquent\Model
+     * @return Tmpl|\Illuminate\Database\Eloquent\Model
      */
     public function updateOrCreate(array $save)
     {
@@ -53,18 +62,18 @@ class TempRepository extends Repository
         if (isset($save['updated_at'])) {
             $attributes['updated_at'] = $save['updated_at'];
         }
-        return Temp::updateOrCreate($attributes, $save);
+        return Tmpl::updateOrCreate($attributes, $save);
     }
 
     /**
      * @param array $save
      *
-     * @return Temp|\Illuminate\Database\Eloquent\Model
+     * @return Tmpl|\Illuminate\Database\Eloquent\Model
      */
     public function update(array $save, $id)
     {
         $attributes['updated_at'] = $save['updated_at'];
-        return Temp::find($id)->update($attributes, $save);
+        return Tmpl::find($id)->update($attributes, $save);
     }
 
     /**
@@ -74,7 +83,7 @@ class TempRepository extends Repository
      */
     public function destroy(int $id)
     {
-        return Temp::destroy($id);
+        return Tmpl::destroy($id);
     }
 
 }

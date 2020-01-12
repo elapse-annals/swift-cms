@@ -2,63 +2,96 @@
 
 namespace App\Services;
 
-use App\Repositories\TempRepository;
+use App\Presenters\TmplPresenter;
+use App\Repositories\TmplRepository;
 
 /**
- * Class TempService
+ * Class TmplService
  *
  * @package App\Services
  */
-class TempService extends Service
+class TmplService extends Service
 {
     /**
-     * @var TempRepository
+     * @var TmplRepository
      */
     protected $repository;
 
+    /**
+     * @var
+     */
     private $request_data;
 
     /**
-     * TempService constructor.
+     * TmplService constructor.
      */
-    public function __construct($request_data)
+    public function __construct()
     {
         parent::__construct();
-        $this->request_data = $request_data;
-        $this->repository = new TempRepository();
+        $this->repository = new TmplRepository();
     }
 
-    public function index()
+    /**
+     * @param array $data
+     *
+     * @return mixed
+     */
+    public function getList($data = [])
+    {
+        if (isset($data['per_page'])) {
+            $this->repository->per_page = $data['per_page'];
+        }
+        if (! isset($data['search']) || '{}' == $data['search']) {
+            $data['search'] = [];
+        }
+        return $this->repository->getList($data['search']);
+    }
+
+    /**
+     * @param $data
+     *
+     * @return int
+     */
+    public function store($data)
     {
         return $this->repository
-            ->getList();
+            ->create($data);
     }
 
-    public function store(Request $request)
-    {
-    }
-
+    /**
+     *
+     */
     public function create()
     {
     }
 
-    public function show($id)
+    /**
+     * @param $id
+     *
+     * @return \App\Models\Tmpl|\App\Models\Tmpl[]|\Illuminate\Database\Eloquent\Collection|\Illuminate\Database\Eloquent\Model|null
+     */
+    public function getIdInfo($id)
     {
+        return $this->repository->find($id);
     }
 
-    public function update()
+    /**
+     * @param $data
+     *
+     * @return int
+     */
+    public function update($data, $id)
     {
-        $id = $this->request_data->id;
-        return $this->repository
-            ->save();
+        return $this->repository->update($data, $id);
     }
 
+    /**
+     * @param $id
+     */
     public function destroy($id)
     {
-        $this->service->destroy($id);
+        $this->repository->destroy($id);
     }
 
-    public function edit($id)
-    {
-    }
+
 }

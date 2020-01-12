@@ -1,12 +1,18 @@
 <template>
     <el-row>
-        <el-col :span="18">
-            <el-button type="primary" plain="true">新增</el-button>
+        <el-col :span="19">
+            <a href="/tmpls/create">
+                <el-button type="primary" plain icon="el-icon-plus">
+                    新增
+                </el-button>
+            </a>
+            <a href="/export/tmpls" target="_blank">
+                <el-button  plain icon="el-icon-download">导出</el-button>
+            </a>
         </el-col>
-        <el-col :span="6">
-            <el-button type="primary" plain="true" @click="onSubmit">查询</el-button>
-            <el-button plain="true" @click="resetForm('search')">重置</el-button>
-            <el-button type="danger" plain="true" @click="resetForm('search')">删除</el-button>
+        <el-col :span="5">
+            <el-button type="primary" plain @click="onSubmit()" icon="el-icon-search">查询</el-button>
+            <el-button type="" plain @click="resetForm('search')" icon="el-icon-refresh-left">重置</el-button>
         </el-col>
     </el-row>
 </template>

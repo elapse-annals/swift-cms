@@ -3,30 +3,33 @@
 namespace App\Formatters;
 
 /**
- * Class TempFormatter
+ * Class TmplFormatter
  *
  * @package App\Formatters
  */
-class TempFormatter extends Formatter
+class TmplFormatter extends Formatter
 {
     /**
+     * if Association model need :  
+     *      foreach ($items as &$item) {
+                $item['info'] = [$item['info']];
+            }
+     *
      * @param array $data
      *
      * @return array
      */
     public function formatIndex(array $data): array
     {
+        $items = collect($data['tmpls']->items())->toArray();
         return [
             'info' => $data['info'],
             'js_data' => [
-                'data' => $data['temps']->items(),
-                'page' => [
-                    "current_page" => $data['temps']->currentPage(),
-                    "sizes" => [10, 50, 100, 300],
-                    "per_page" => $data['temps']->perPage(),
-                ],
+                'data' => $items,
+                'page' => $this->assemblyPage($data['tmpls']),
             ],
-            'table_data' => $data['table_data'],
+            'list_map' => $data['list_map'],
+            'search_map' => $data['search_map'],
         ];
     }
 
@@ -39,6 +42,4 @@ class TempFormatter extends Formatter
     {
         return $data;
     }
-
-
 }
