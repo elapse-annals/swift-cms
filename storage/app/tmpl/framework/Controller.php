@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\DB;
 
 /**
  * Class TmplController
+<<<<<<< HEAD
+=======
+ *
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
  * @package App\Http\Controllers
  */
 class TmplController extends Controller
@@ -68,10 +72,17 @@ class TmplController extends Controller
             $this->validationIndexRequest($data);
             $tmpls = $this->service->getList($data);
             if ($request->is('api/*') || true == $request->input('api')) {
+<<<<<<< HEAD
                 return $this->successReturn($tmpls, $this->formatter->assemblyPage($tmpls));
             }
             $table_comment_map = $this->getTableCommentMap('tmpls');
             //            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
+=======
+                return $this->successReturn($tmpls, 'success', $this->formatter->assemblyPage($tmpls));
+            }
+            $table_comment_map = $this->getTableCommentMap();
+//            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
             $view_data = [
                 'info'       => $this->getInfo(),
                 'tmpls'      => $tmpls,
@@ -152,7 +163,11 @@ class TmplController extends Controller
                 'js_data'     => [
                     'data' => [],
                 ],
+<<<<<<< HEAD
                 'detail_data' => $this->getTableCommentMap('tmpls'),
+=======
+                'detail_data' => $this->getTableCommentMap(),
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
             ];
             return view('tmpl.create', $view_data);
         } catch (Exception $exception) {
@@ -177,11 +192,19 @@ class TmplController extends Controller
                 'js_data'     => [
                     'detail_data' => $tmpl,
                 ],
+<<<<<<< HEAD
                 'detail_data' => $this->getTableCommentMap('tmpls'),
             ];
             if ($this->enable_filter) {
                 $view_data = $this->transformer->transformShow(
                     $this->formatter->formatShow($view_data)
+=======
+                'detail_data' => $this->getTableCommentMap(),
+            ];
+            if ($this->enable_filter) {
+                $view_data = $this->transformer->transformIndex(
+                    $this->formatter->formatIndex($view_data)
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
                 );
             }
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
@@ -209,7 +232,11 @@ class TmplController extends Controller
      * @param Request $request
      * @param         $id
      *
+<<<<<<< HEAD
      * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
+=======
+     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|int
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
      * @throws Exception
      */
     public function update(Request $request, $id)
@@ -226,8 +253,12 @@ class TmplController extends Controller
             ) {
                 return $this->successReturn($res_db);
             }
+<<<<<<< HEAD
             $view_data = $this->show($request, $id, true);
             return view('tmpl.show', $view_data);
+=======
+            return $res_db;
+>>>>>>> a55accc7e500eae5448358bf7142dd83bccc5e52
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
