@@ -3,7 +3,6 @@
 namespace App\Repositories;
 
 use App\Models\Tmpl;
-use phpDocumentor\Reflection\Types\Object_;
 
 /**
  * Class TmplRepository
@@ -30,7 +29,7 @@ class TmplRepository extends Repository
         if (!empty($data)) {
             $Tmpl = $this->assembvlyWhere($Tmpl, $data);
         }
-        return $Tmpl->Paginate($this->per_page);
+        return $Tmpl->orderBy('id')->Paginate($this->per_page);
     }
 
     /**

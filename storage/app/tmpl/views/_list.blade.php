@@ -6,7 +6,7 @@
         @selection-change="handleSelectionChange">
         <el-table-column
             type="selection"
-            width="55">
+            width="40">
         </el-table-column>
 
         %Placeholder%
@@ -14,7 +14,7 @@
         <el-table-column
             fixed="right"
             label="操作"
-            width="160"
+            width="200"
             header-align="center"
         >
             <template slot-scope="scope">

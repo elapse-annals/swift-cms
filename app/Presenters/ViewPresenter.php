@@ -10,12 +10,12 @@ namespace App\Presenters;
 class ViewPresenter extends Presenter
 {
     /**
-     * @param $list_map
-     * @param $is_static_render
+     * @param array $list_map
+     * @param bool  $is_static_render
      *
      * @return string
      */
-    public function lists($list_map = [], $is_static_render = false)
+    public function lists($list_map = [], $is_static_render = false): string
     {
         $view_html = '';
         if ($is_static_render) {
@@ -35,18 +35,69 @@ class ViewPresenter extends Presenter
     /**
      * @return string
      */
+    public function detail(): string
+    {
+        return '@foreach ($detail_data as $detail_datum)
+                    <el-row>
+                        <el-col :span="4">
+                            <label for="{{$detail_datum[\'prop\']}}">{{$detail_datum[\'label\']}}</label>
+                        </el-col>
+                        <el-col :span="16">
+                            <el-input id="{{$detail_datum[\'prop\']}}"
+                                      :class="{aggravation:detail_data.{{$detail_datum[\'prop\']}}}"
+                                      v-model="detail_data.{{$detail_datum[\'prop\']}}"
+                                      :disabled="is_disabled_edit"
+                                      placeholder="{{$detail_datum[\'label\']}}"></el-input>
+                        </el-col>
+                    </el-row>
+                @endforeach';
+    }
+
+    /**
+     * @return string
+     */
+    public function search(): string
+    {
+        return '@foreach ($search_map as $table_datum)
+                    @if (0 === substr_compare($table_datum[\'prop\'],\'_at\',-strlen(\'_at\')))
+                        <el-date-picker
+                                v-model="search.{{$table_datum[\'prop\']}}"
+                                type="datetimerange"
+                                start-placeholder="{{$table_datum[\'label\']}} @lang(\'form.start_date\')"
+                                end-placeholder="{{$table_datum[\'label\']}} @lang(\'form.end_date\')"
+                                value-format="yyyy-MM-dd HH:mm"
+                                format="yyyy-MM-dd HH:mm"
+                                :default-time="[\'00:00:00\', \'23:59:59\']">
+                        </el-date-picker>
+                    @elseif (0 === substr_compare($table_datum[\'prop\'],\'_number\',-strlen(\'_number\')))
+                        <el-form-item label="{{$table_datum[\'label\']}}">
+                            <el-input v-model.number="search.{{$table_datum[\'prop\']}}"
+                                      placeholder="{{$table_datum[\'label\']}}"></el-input>
+                        </el-form-item>
+                    @else
+                        <el-form-item label="{{$table_datum[\'label\']}}">
+                            <el-input v-model="search.{{$table_datum[\'prop\']}}"
+                                      placeholder="{{$table_datum[\'label\']}}"></el-input>
+                        </el-form-item>
+                    @endif
+                @endforeach';
+    }
+
+    /**
+     * @return string
+     */
     private function autoTableColumn()
     {
         return '@foreach($list_map as $table_datum)
                 @if(isset($table_datum[\'is_array\']) && true === $table_datum[\'is_array\'])
-                    <el-table-column min-width="180">
+                    <el-table-column min-width="190">
                         <template slot-scope="scope" width="200">
                             <el-table :data="scope.row.info" style="width: 100%">
                                 @foreach($table_datum[\'child_map\'] as $item)
                                     <el-table-column
                                             prop="{{$item[\'prop\']}}"
                                             label="{{$item[\'label\']}}"
-                                            min-width="180">
+                                            min-width="190">
                                     </el-table-column>
                                 @endforeach
                             </el-table>
@@ -56,7 +107,7 @@ class ViewPresenter extends Presenter
                     <el-table-column
                             prop="{{$table_datum[\'prop\']}}"
                             label="{{$table_datum[\'label\']}}"
-                            min-width="180"
+                            min-width="190"
                     >
                     </el-table-column>
                 @endif
@@ -86,7 +137,7 @@ EOF;
         <el-table-column min-width="180" >
                     <template slot-scope="scope" width="200">
                         <el-table :data="scope.row.info" style="width: 100%">
-                           
+
 EOF;
         foreach ($column_array['child_map'] as $item) {
             $temp_view .= $this->tableColumn($item);

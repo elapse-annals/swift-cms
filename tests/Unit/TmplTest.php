@@ -2,19 +2,17 @@
 
 namespace Tests\Unit;
 
-use Tests\TestCase;
-use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Services\TmplService;
-use Illuminate\Support\Facades\Log;
+use PHPUnit\Framework\TestCase;
 
 class TmplTest extends TestCase
 {
-    public function testTmplGetList()
+    /**
+     * A basic unit test example.
+     *
+     * @return void
+     */
+    public function testExample()
     {
-        $TmplService = new TmplService();
-        $response = $TmplService->getList();
-        Log::info('message', [$response]);
         $this->assertTrue(true);
     }
 }

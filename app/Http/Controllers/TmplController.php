@@ -10,8 +10,6 @@ use Exception;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Cache;
 
 
 /**
@@ -71,10 +69,10 @@ class TmplController extends Controller
             $this->validationIndexRequest($data);
             $tmpls = $this->service->getList($data);
             if ($request->is('api/*') || true == $request->input('api')) {
-                return $this->successReturn($tmpls, 'success', $this->formatter->assemblyPage($tmpls));
+                return $this->successReturn($tmpls, $this->formatter->assemblyPage($tmpls));
             }
-            $table_comment_map = $this->getTableCommentMap();
-//            $table_comment_map = $this->appendAssociationModelMap($table_comment_map,[]);
+            $table_comment_map = $this->getTableCommentMap('tmpls');
+            //            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
             $view_data = [
                 'info'       => $this->getInfo(),
                 'tmpls'      => $tmpls,
@@ -97,7 +95,7 @@ class TmplController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    private function validationIndexRequest(array $data): void
+    private function validationIndexRequest(array $data)
     {
         $rules = [
         ];
@@ -122,7 +120,7 @@ class TmplController extends Controller
             $this->validateStoreRequest($data);
             $store_status = $this->service->store($data);
             DB::commit();
-            return $store_status;
+            return $this->successReturn($store_status);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -154,7 +152,7 @@ class TmplController extends Controller
                 'js_data'     => [
                     'data' => [],
                 ],
-                'detail_data' => $this->getTableCommentMap(),
+                'detail_data' => $this->getTableCommentMap('tmpls'),
             ];
             return view('tmpl.create', $view_data);
         } catch (Exception $exception) {
@@ -178,11 +176,11 @@ class TmplController extends Controller
                 'js_data'     => [
                     'detail_data' => $tmpl,
                 ],
-                'detail_data' => $this->getTableCommentMap(),
+                'detail_data' => $this->getTableCommentMap('tmpls'),
             ];
             if ($this->enable_filter) {
-                $view_data = $this->transformer->transformIndex(
-                    $this->formatter->formatIndex($view_data)
+                $view_data = $this->transformer->transformShow(
+                    $this->formatter->formatShow($view_data)
                 );
             }
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
@@ -210,8 +208,7 @@ class TmplController extends Controller
      * @param Request $request
      * @param         $id
      *
-     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response|int
-     * @throws Exception
+     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
     public function update(Request $request, $id)
     {
@@ -221,10 +218,14 @@ class TmplController extends Controller
             $this->validateUpdateRequest($data, $id);
             $res_db = $this->service->update($data, $id);
             DB::commit();
-            if ($request->is('api/*')) {
-                return $res_db;
+            if ($request->is('api/*') ||
+                true == $request->input('api') ||
+                'json' === $request->getContentType()
+            ) {
+                return $this->successReturn($res_db);
             }
-            return $res_db;
+            $view_data = $this->show($request, $id, true);
+            return view('tmpl.show', $view_data);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -314,6 +315,19 @@ class TmplController extends Controller
         return Excel::download(new TmplExport, $excel_name);
     }
 
-
-
+    public function testQueryDb()
+    {
+//        return 'yoyo';
+        /*$act_time = microtime(true);
+        $sum = 0;
+        for ($i = 1; $i < 100000; $i++) {
+            $sum = $sum * round(0, 1) + $sum;
+        }
+        return microtime(true) - $act_time;*/
+        $act_time = microtime(true);
+        for ($i = 1; $i < 10; $i++) {
+            $res = DB::select("SELECT * FROM tmpls LIMIT {$i},1;");
+        }
+        return microtime(true) - $act_time;
+    }
 }

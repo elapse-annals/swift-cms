@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\FrameworkException;
 use App\Presenters\ViewPresenter;
-use Exception;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Route;
+use ReflectionException as ReflectionExceptionAlias;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 
 /**
  * Class FrameworkController
@@ -39,11 +40,16 @@ class FrameworkController extends Controller
      * @var
      */
     private $file_path;
-
     /**
-     * @var bool
+     * @see  ViewPresenter
+     *
+     * @var \stdClass
      */
-    private $is_static_render = false;
+    private $ViewPresenter;
+    /**
+     * @var
+     */
+    private $model_map;
 
     /**
      * FrameworkController constructor.
@@ -54,26 +60,36 @@ class FrameworkController extends Controller
     {
         parent::__construct();
         $this->framework_name = ucfirst($framework_name);
-        $this->framework_name_plural = Str::plural($this->framework_name);
+        //        $this->framework_name_plural = Str::plural($this->framework_name);
         $this->framework_name_low = strtolower($this->framework_name);
         $this->framework_name_low_plural = Str::plural($this->framework_name_low);
     }
 
     /**
-     * @param $framework_file_type
-     * @param $is_delete
-     * @param $is_static_render
+     * @param      $framework_file_type
+     * @param      $is_delete
+     * @param bool $is_force
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
+     * @throws FileNotFoundException
+     * @throws FrameworkException
+     * @throws ReflectionExceptionAlias
      */
-    public function handle($framework_file_type, $is_delete, $is_static_render)
+    public function handle($framework_file_type, $is_delete, $is_force = false): void
     {
-        $this->init($framework_file_type);
-        $this->is_static_render = $is_static_render;
-        $this->file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
+        $this->initFilePath($framework_file_type);
+        $temp_framework_file_type = $framework_file_type;
+        if ('TestUnit' === $framework_file_type) {
+            $temp_framework_file_type = 'Test';
+        }
+        $this->file = app_path("{$this->file_path}/{$this->framework_name}{$temp_framework_file_type}.php");
         if ($is_delete) {
             $this->delete($framework_file_type);
+        } elseif ('Test' === $framework_file_type || 'TestUnit' === $framework_file_type) {
+            $this->createTest($framework_file_type);
         } else {
+            if (true === $is_force) {
+                $this->delete($framework_file_type);
+            }
             $this->checkFileExistence($framework_file_type);
             $this->create($framework_file_type);
         }
@@ -82,7 +98,7 @@ class FrameworkController extends Controller
     /**
      * @param $framework_file_type
      */
-    public function init($framework_file_type): void
+    public function initFilePath($framework_file_type): void
     {
         switch ($framework_file_type) {
             case 'Controller':
@@ -98,27 +114,33 @@ class FrameworkController extends Controller
             case 'Export':
                 $this->file_path = $framework_file_type . 's';
                 break;
+            case 'Test':
+                $this->file_path = '../tests/Feature';
+                break;
+            case 'TestUnit':
+                $this->file_path = '../tests/Unit';
+                break;
         }
     }
 
     /**
      * @param $framework_file_type
      *
-     * @throws Exception
+     * @throws FrameworkException
      */
-    private function checkFileExistence($framework_file_type)
+    private function checkFileExistence($framework_file_type): void
     {
         if (is_file($this->file)) {
-            throw new Exception("{$this->framework_name}{$framework_file_type}.php existing!");
+            throw new FrameworkException("{$this->framework_name}{$framework_file_type}.php existing!");
         }
     }
 
     /**
      * @param $framework_file_type
      */
-    public function delete($framework_file_type)
+    public function delete($framework_file_type): void
     {
-        $file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
+        $file = $this->file;
         if (file_exists($file)) {
             unlink($file);
         }
@@ -130,7 +152,7 @@ class FrameworkController extends Controller
                 $this->deleteRoute($route_type);
             }
         }
-        usleep(10000);
+        usleep(1000);
     }
 
     /**
@@ -147,7 +169,8 @@ class FrameworkController extends Controller
                 $resource_type = 'resource';
         }
         $route_web_path = base_path("routes/{$route_type}.php");
-        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}', '{$this->framework_name}Controller');";
+        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}'," .
+            " '{$this->framework_name}Controller');";
         $file_get_contents = file_get_contents($route_web_path);
         $file_get_contents = str_replace($route_string, '', $file_get_contents);
         file_put_contents($route_web_path, $file_get_contents);
@@ -156,24 +179,35 @@ class FrameworkController extends Controller
     /**
      * @param $framework_file_type
      *
-     * @throws \Illuminate\Contracts\Filesystem\FileNotFoundException
-     * @todo  抽象替换函数
+     * @throws FileNotFoundException
+     * @throws ReflectionExceptionAlias
      */
-    public function create($framework_file_type): void
+    private function create($framework_file_type): void
     {
-        $framework_name_plural = Str::plural($this->framework_name);
+        $this->framework_name_plural = Str::plural($this->framework_name);
         $Storage = Storage::disk('local');
         $body = $Storage->get("tmpl/framework/{$framework_file_type}.php");
-        $body = str_replace('Tmpls', $framework_name_plural, $body);
-        $body = str_replace('Tmpl', $this->framework_name, $body);
-        $body = str_replace('tmpls', $this->framework_name_low_plural, $body);
-        $body = str_replace('tmpl', $this->framework_name_low, $body);
+        $body = str_replace(
+            [
+                'Tmpls',
+                'Tmpl',
+                'tmpls',
+                'tmpl',
+            ],
+            [
+                $this->framework_name_plural,
+                $this->framework_name,
+                $this->framework_name_low_plural,
+                $this->framework_name_low,
+            ],
+            $body
+        );
         $file = app_path("{$this->file_path}/{$this->framework_name}{$framework_file_type}.php");
-        if (!is_file($file)) {
+        if (! is_file($file)) {
             file_put_contents($file, $body);
         }
         if ('Controller' === $framework_file_type) {
-            $tmpl_resources_directory = storage_path("app/tmpl/views");
+            $tmpl_resources_directory = storage_path('app/tmpl/views');
             $resources_directory = base_path("resources/views/{$this->framework_name_low}");
             exec("cp -r {$tmpl_resources_directory} {$resources_directory}");
             $route_types = ['web', 'api'];
@@ -181,32 +215,57 @@ class FrameworkController extends Controller
                 $this->insertRoute($route_type);
             }
             $framework_view_files = scandir($resources_directory);
+            $this->ViewPresenter = new ViewPresenter();
+            $this->model_map = $this->getModelMap();
             foreach ($framework_view_files as $framework_view_file) {
-                if (!in_array($framework_view_file, ['.', '..'])) {
+                if (! in_array($framework_view_file, ['.', '..'])) {
                     $route_web_path = $resources_directory . '/' . $framework_view_file;
                     $file_get_contents = file_get_contents($route_web_path);
-                    $file_get_contents = str_replace('tmpls', $this->framework_name_low_plural, $file_get_contents);
-                    $file_get_contents = str_replace('tmpl', $this->framework_name_low, $file_get_contents);
+                    $file_get_contents = str_replace(
+                        ['tmpls', 'tmpl'],
+                        [$this->framework_name_low_plural, $this->framework_name_low],
+                        $file_get_contents
+                    );
                     $file_get_contents = $this->generateStaticView($framework_view_file, $file_get_contents);
                     file_put_contents($route_web_path, $file_get_contents);
                 }
             }
         }
-        usleep(10000);
+        usleep(1000);
+    }
+
+    /**
+     * @param $framework_file_type
+     */
+    private function createTest($framework_file_type)
+    {
+        if ('Test' === $framework_file_type) {
+            exec("php artisan make:test {$this->framework_name}Test");
+        }
+        if ('TestUnit' === $framework_file_type) {
+            exec("php artisan make:test {$this->framework_name}Test --unit");
+        }
     }
 
     /**
      * @param $file_name
      * @param $data
      *
-     * @return mixed
+     * @return string|string[]
+     * @throws ReflectionExceptionAlias
      */
     private function generateStaticView($file_name, $data)
     {
         $replace_data = '';
         switch ($file_name) {
             case '_list.blade.php':
-                $replace_data = $this->generatelistView($data);
+                $replace_data = $this->ViewPresenter->lists();
+                break;
+            case '_detail.blade.php':
+                $replace_data = $this->ViewPresenter->detail();
+                break;
+            case '_search.blade.php':
+                $replace_data = $this->ViewPresenter->search();
                 break;
         }
         $data = str_replace('%Placeholder%', $replace_data, $data);
@@ -214,51 +273,13 @@ class FrameworkController extends Controller
     }
 
     /**
-     * @param $data
-     *
-     * @return string
-     * @throws \ReflectionException
-     */
-    private function generatelistView($data)
-    {
-        $ViewPresenter = new ViewPresenter();
-        $list_map = [];
-        if ($this->is_static_render) {
-            $list_map = $this->getModelMap();
-        }
-        return $ViewPresenter->lists($list_map, $this->is_static_render);
-    }
-
-    /**
-     * @param array $list_map
-     *
      * @return array
-     * @throws \ReflectionException
+     * @throws ReflectionExceptionAlias
      */
-    private function getModelMap(array $list_map = []): array
+    private function getModelMap(): array
     {
-        $ReflectionClass = new \ReflectionClass("\App\Models\{$this->framework_name}");
-        $list_map = $this->getTableCommentMap($this->framework_name);
-        $child_map_lists = $this->assemblyChildMapList($ReflectionClass->getMethods());
-        $this->appendAssociationModelMap($list_map, $child_map_lists);
+        $list_map = $this->getTableCommentMap($this->framework_name_low_plural);
         return $list_map;
-    }
-
-    /**
-     * @param array $data
-     * @param array $child_map_lists
-     *
-     * @return array
-     */
-    private function assemblyChildMapList(array $data, array $child_map_lists = []): array
-    {
-        foreach ($data as $datum) {
-            $child_map_lists[] = [
-                'prop' => $datum,
-                'label' => $datum,
-            ];
-        }
-        return $child_map_lists;
     }
 
     /**
@@ -267,15 +288,16 @@ class FrameworkController extends Controller
     private function insertRoute($route_type): void
     {
         switch ($route_type) {
-            case 'web':
-                $resource_type = 'resource';
-                break;
             case 'api':
                 $resource_type = 'apiResource';
                 break;
+            case 'web':
+            default:
+                $resource_type = 'resource';
         }
         $route_web_path = base_path("routes/{$route_type}.php");
-        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}', '{$this->framework_name}Controller');";
+        $route_string = "Route::{$resource_type}('{$this->framework_name_low_plural}'," .
+            " '{$this->framework_name}Controller');";
         file_put_contents($route_web_path, $route_string . PHP_EOL, FILE_APPEND);
     }
 }

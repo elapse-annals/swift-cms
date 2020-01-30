@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Exceptions\FrameworkException;
 use Exception;
 use Illuminate\Console\Command;
 use App\Http\Controllers\FrameworkController;
@@ -17,17 +18,11 @@ class Framework extends Command
      * @var string
      */
     protected $signature = 'make:framework
-                            {framework_name : framework name}                            
+                            {framework_name : framework name}
                             {--delete : delete framework}
                             {--D : delete framework}
-                            {--StaticRender : Static rendering html}
-                            {--static : Static rendering html}
+                            {--F : force cover framework}
                             ';
-
-    /**
-     * @var string
-     */
-    protected $description = 'Command description';
 
     /**
      * @var array
@@ -40,32 +35,31 @@ class Framework extends Command
         'Transformer',
         'Formatter',
         'Export',
+        'Test',
+        'TestUnit',
     ];
 
     /**
-     * Framework constructor.
+     * @var string
      */
-    public function __construct()
-    {
-        parent::__construct();
-    }
+    protected $description = 'Command description';
 
     /**
      *
      */
-    public function handle()
+    public function handle(): void
     {
         try {
             $framework_name = $this->argument('framework_name');
-            list($is_delete, $is_static_render) = $this->initOption();
+            [$is_delete, $is_force] = $this->initOption();
             if ($is_delete && ! $this->confirm('Do you wish to continue? [y|N]')) {
-                throw new Exception('Continue Delete');
+                throw new FrameworkException('Continue Delete');
             }
             $framework_file_types = $this->framework_file_types;
             $bar = $this->output->createProgressBar(count($framework_file_types));
             $FrameworkController = new FrameworkController($framework_name);
             foreach ($framework_file_types as $framework_file_type) {
-                $FrameworkController->handle($framework_file_type, $is_delete, $is_static_render);
+                $FrameworkController->handle($framework_file_type, $is_delete, $is_force);
                 $bar->advance();
             }
             $bar->finish();
@@ -74,8 +68,12 @@ class Framework extends Command
                 $msg = 'delete';
             }
             $stdout_string = PHP_EOL . " {$msg} framework \e[31m{$framework_name}\e[0m \e[32msuccess";
+        } catch (FrameworkException $exception) {
+            $stdout_string = " \e[31m {$exception->getMessage()} \e[0m \e[32min file
+            {$exception->getFile()} line {$exception->getLine()}";
         } catch (Exception $exception) {
-            $stdout_string = " \e[31m{$exception->getMessage()}\e[0m \e[32min file {$exception->getFile()} line {$exception->getLine()}";
+            $stdout_string = " \e[31m {$exception->getMessage()} \e[0m \e[32min file
+            {$exception->getFile()} line {$exception->getLine()}";
         }
         $this->info($stdout_string);
     }
@@ -87,8 +85,7 @@ class Framework extends Command
     {
         $is_delete = $this->option('delete');
         $is_delete or $is_delete = $this->option('D');
-        $is_static_render = $this->option('static');
-        $is_static_render or $is_static_render = $this->option('StaticRender');
-        return [$is_delete, $is_static_render];
+        $is_force = $this->option('F');
+        return [$is_delete, $is_force];
     }
 }
