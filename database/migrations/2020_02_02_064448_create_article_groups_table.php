@@ -16,7 +16,7 @@ class CreateArticleGroupsTable extends Migration
         Schema::create('article_groups', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('group_name');
-            $table->integer('parent_id');
+            $table->integer('parent_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->string('created_by', 80);
             $table->timestamp('updated_at')->default(
@@ -36,6 +36,6 @@ class CreateArticleGroupsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('groups');
+        Schema::dropIfExists('article_groups');
     }
 }

@@ -60,3 +60,4 @@ Route::get('testQueryDb', 'TmplController@testQueryDb');
 
 
 Route::resource('tmpls', 'TmplController');
+Route::resource('articles', 'ArticleController');
