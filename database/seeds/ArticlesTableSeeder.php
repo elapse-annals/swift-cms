@@ -1,9 +1,8 @@
 <?php
 
 use Illuminate\Database\Seeder;
-use App\Models\Temp;
 
-class TempSeeder extends Seeder
+class ArticlesTableSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -12,7 +11,6 @@ class TempSeeder extends Seeder
      */
     public function run()
     {
-        factory(Temp::class, 50)
-            ->create();
+        //
     }
 }
