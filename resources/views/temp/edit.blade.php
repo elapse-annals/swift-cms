@@ -32,7 +32,7 @@
             },
             methods: {
                 onSubmit() {
-                    // @todo 处理提交
+                    //
                     axios.put('/api/temps/2', this.detail_data).then((response) => {
                         var message_type = 'error';
                           if (200 == response.data.code) {
@@ -47,7 +47,7 @@
                     }).catch(error => console.log(error));
                 },
                 onCancel() {
-                    // @todo 处理引用传递问题
+                    //
                     this.detail_data = this.init_table_data
                 }
             }
