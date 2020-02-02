@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ArticleTag;
 use Illuminate\Database\Seeder;
 
 class ArticleTagsTableSeeder extends Seeder
@@ -12,5 +13,7 @@ class ArticleTagsTableSeeder extends Seeder
     public function run()
     {
         //
+        factory(ArticleTag::class, 50)
+            ->create();
     }
 }

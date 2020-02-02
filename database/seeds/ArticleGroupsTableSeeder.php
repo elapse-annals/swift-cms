@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\ArticleGroup;
 use Illuminate\Database\Seeder;
 
 class ArticleGroupsTableSeeder extends Seeder
@@ -12,5 +13,7 @@ class ArticleGroupsTableSeeder extends Seeder
     public function run()
     {
         //
+        factory(ArticleGroup::class, 50)
+            ->create();
     }
 }
