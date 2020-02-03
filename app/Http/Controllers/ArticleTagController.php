@@ -2,32 +2,35 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\ArticleTagExport;
+use App\Formatters\ArticleTagFormatter;
+use App\Transformers\ArticleTagTransformer;
+use App\Services\ArticleTagService;
 use Exception;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB; 
-use App\Services\TempService;
-use App\Transformers\TempTransformer;
-use App\Formatters\TempFormatter;
+use Illuminate\Support\Facades\DB;
+
 
 /**
- * Class TempController
+ * Class ArticleTagController
  *
  * @package App\Http\Controllers
  */
-class TempController extends Controller
+class ArticleTagController extends Controller
 {
     /**
-     * @var TempService
+     * @var ArticleTagService
      */
     protected $service;
     /**
-     * TempFormatter
+     * ArticleTagFormatter
      *
-     * @var TempFormatter
+     * @var ArticleTagFormatter
      */
     private $formatter;
     /**
-     * @var TempTransformer
+     * @var ArticleTagTransformer
      */
     private $transformer;
 
@@ -35,21 +38,17 @@ class TempController extends Controller
      * @var bool
      */
     private $enable_filter = true;
-    /**
-     * @var array
-     */
-    private $transformer_functions = ['index', 'show', 'edit'];
 
     /**
-     * TempController constructor.
+     * ArticleTagController constructor.
      */
     public function __construct()
     {
         parent::__construct();
-        $this->service = new TempService();
+        $this->service = new ArticleTagService();
         if ($this->enable_filter) {
-            $this->formatter = new TempFormatter();
-            $this->transformer = new TempTransformer();
+            $this->formatter = new ArticleTagFormatter();
+            $this->transformer = new ArticleTagTransformer();
         }
     }
 
@@ -62,20 +61,30 @@ class TempController extends Controller
     {
         try {
             $data = $request->input();
-            $this->validationIndexRequest($data);
-            $temps = $this->service->getList();
-            if ($request->is('api/*')) {
-                return $temps;
+            if (true == $request->input('api')) {
+                $data = array_map(function ($datum) {
+                    return json_decode($datum, true);
+                }, $data);
             }
-            $view_data = $this->filter(
-                [
-                    'info'       => $this->getInfo(),
-                    'temps'      => $this->service->getList(),
-                    'table_data' => $this->getTableCommentMap(),
-                ],
-                __FUNCTION__
-            );
-            return view('temp.index', $view_data);
+            $this->validationIndexRequest($data);
+            $articletags = $this->service->getList($data);
+            if ($request->is('api/*') || true == $request->input('api')) {
+                return $this->successReturn($articletags, $this->formatter->assemblyPage($articletags));
+            }
+            $table_comment_map = $this->getTableCommentMap('articletags');
+            //            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
+            $view_data = [
+                'info'       => $this->getInfo('index'),
+                'articletags'      => $articletags,
+                'list_map'   => $table_comment_map,
+                'search_map' => $table_comment_map,
+            ];
+            if ($this->enable_filter) {
+                $view_data = $this->transformer->transformIndex(
+                    $this->formatter->formatIndex($view_data)
+                );
+            }
+            return view('articletag.index', $view_data);
         } catch (Exception $exception) {
             return [$exception->getMessage(), $exception->getFile(), $exception->getLine()];
         }
@@ -86,7 +95,7 @@ class TempController extends Controller
      *
      * @throws \Illuminate\Validation\ValidationException
      */
-    private function validationIndexRequest(array $data): void
+    private function validationIndexRequest(array $data)
     {
         $rules = [
         ];
@@ -106,12 +115,12 @@ class TempController extends Controller
     public function store(Request $request)
     {
         try {
-            DB::beginTranscaction();
+            DB::beginTransaction();
             $data = $request->input();
             $this->validateStoreRequest($data);
             $store_status = $this->service->store($data);
             DB::commit();
-            return $store_status;
+            return $this->successReturn($store_status);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -139,17 +148,13 @@ class TempController extends Controller
     {
         try {
             $view_data = [
-                'info'        => $this->getInfo(),
+                'info'        => $this->getInfo('create'),
                 'js_data'     => [
                     'data' => [],
                 ],
-                'detail_data' => [
-                    'id',
-                    'name',
-                    'sex',
-                ],
+                'detail_data' => $this->getTableCommentMap('articletags'),
             ];
-            return view('temp.create', $view_data);
+            return view('articletag.create', $view_data);
         } catch (Exception $exception) {
         }
     }
@@ -165,25 +170,23 @@ class TempController extends Controller
     {
         try {
             $this->validationShowRequest($id);
-            $temp = $this->service->getIdInfo($id);
-            $view_data = $this->filter(
-                [
-                    'info'        => $this->getInfo(),
-                    'js_data'     => [
-                        'detail_data' => $temp,
-                    ],
-                    'detail_data' => [
-                        'id',
-                        'name',
-                        'sex',
-                    ],
+            $articletag = $this->service->getIdInfo($id);
+            $view_data = [
+                'info'        => $this->getInfo('show'),
+                'js_data'     => [
+                    'detail_data' => $articletag,
                 ],
-                __FUNCTION__
-            );
-            if ($request->is('api/*') || $is_edit) {
+                'detail_data' => $this->getTableCommentMap('articletags'),
+            ];
+            if ($this->enable_filter) {
+                $view_data = $this->transformer->transformShow(
+                    $this->formatter->formatShow($view_data)
+                );
+            }
+            if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
                 return $view_data;
             }
-            return view('temp.show', $view_data);
+            return view('articletag.show', $view_data);
         } catch (Exception $exception) {
             return $this->catchException($exception);
         }
@@ -205,22 +208,27 @@ class TempController extends Controller
      * @param Request $request
      * @param         $id
      *
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Contracts\View\Factory|\Illuminate\Http\Response|\Illuminate\View\View
      */
     public function update(Request $request, $id)
     {
         try {
-            DB::beginTranscaction();
+            DB::beginTransaction();
             $data = $request->input();
             $this->validateUpdateRequest($data, $id);
-            $res_db = $this->service->update($data, $id);            
+            $res_db = $this->service->update($data, $id);
             DB::commit();
-            if ($request->is('api/*')) {
-                return $res_db;
+            if ($request->is('api/*') ||
+                true == $request->input('api') ||
+                'json' === $request->getContentType()
+            ) {
+                return $this->successReturn($res_db);
             }
+            $view_data = $this->show($request, $id, true);
+            return view('articletag.show', $view_data);
         } catch (Exception $exception) {
             DB::rollBack();
-            return $this->catchException($exception);
+            return $this->catchException($exception, 'api');
         }
     }
 
@@ -237,17 +245,21 @@ class TempController extends Controller
 
     /**
      * @param int $id
+     *
+     * @return array|\Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
+     * @throws Exception
      */
     public function destroy(int $id)
     {
-        try {        
-            DB::beginTranscaction();
+        try {
+            DB::beginTransaction();
             $this->validateDestroy($id);
-            $this->service->destroy($id);            
+            $res_db = $this->service->destroy($id);
             DB::commit();
-        } catch (Exception $exception) {            
+            return $this->successReturn($res_db);
+        } catch (Exception $exception) {
             DB::rollBack();
-            return $this->catchException($exception);
+            return $this->catchException($exception, 'api');
         }
     }
 
@@ -270,56 +282,21 @@ class TempController extends Controller
     public function edit(Request $request, $id)
     {
         $view_data = $this->show($request, $id, true);
-        return view('temp.edit', $view_data);
+        return view('articletag.edit', $view_data);
     }
 
     /**
-     * @return array
-     */
-    private function getInfo(): array
-    {
-        return [
-            'description' => 'xxx',
-            'author'      => 'Ben',
-            'title'       => 'index title',
-        ];
-    }
-
-    /**
-     * @return array
-     */
-    private function getTableCommentMap(): array
-    {
-        return [
-            [
-                'prop'  => 'id',
-                'label' => 'ID',
-            ], [
-                'prop'  => 'name',
-                'label' => '名字',
-            ], [
-                'prop'  => 'sex',
-                'label' => '性别',
-            ],
-        ];
-    }
-
-    /**
-     * @param array  $data
-     * @param string $controller_function
+     * @param $type
      *
      * @return array
      */
-    private function filter(array $data, string $controller_function): array
+    private function getInfo($type): array
     {
-        if ($this->enable_filter && in_array($controller_function, $this->transformer_functions)) {
-            $controller_plural = ucfirst($controller_function);
-            $formatterKey = 'format' . $controller_plural;
-            $transformKey = 'transform' . $controller_plural;
-            return $this->transformer->{$transformKey}(
-                $this->formatter->{$formatterKey}($data)
-            );
-        }
+        return [
+            'description' => "articletag {$type} description",
+            'author'      => 'Ben',
+            'title'       => "articletag {$type} title",
+        ];
     }
 
     /**
@@ -334,5 +311,25 @@ class TempController extends Controller
         }
     }
 
+    public function export()
+    {
+        $excel_name = 'articletag.xls';
+        return Excel::download(new ArticleTagExport, $excel_name);
+    }
 
+    public function testQueryDb()
+    {
+//        return 'yoyo';
+        /*$act_time = microtime(true);
+        $sum = 0;
+        for ($i = 1; $i < 100000; $i++) {
+            $sum = $sum * round(0, 1) + $sum;
+        }
+        return microtime(true) - $act_time;*/
+        $act_time = microtime(true);
+        for ($i = 1; $i < 10; $i++) {
+            $res = DB::select("SELECT * FROM articletags LIMIT {$i},1;");
+        }
+        return microtime(true) - $act_time;
+    }
 }

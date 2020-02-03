@@ -56,3 +56,7 @@ Route::apiResource('languages', 'LanguageController');
 
 Route::apiResource('tmpls', 'TmplController');
 Route::apiResource('articles', 'ArticleController');
+
+
+
+Route::apiResource('articletags', 'ArticleTagController');
