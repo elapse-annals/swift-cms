@@ -1,13 +1,13 @@
-主要内容
+Todo List
 index
 list
 page
 
-内容编辑
--编辑插件
+content edit
+-edit plus
 
-后台
+admin
 
-权限
+auth
 
-静态化
+static
