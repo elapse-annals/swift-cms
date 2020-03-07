@@ -13,7 +13,7 @@ class TmplsTableSeeder extends Seeder
     public function run()
     {
         ini_set('memory_limit', '512M');
-        factory(Tmpl::class, 50)
+        factory(Tmpl::class, 100000)
             ->create();
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\App;
 use App\Exports\TmplExport;
 use App\Formatters\TmplFormatter;
 use App\Transformers\TmplTransformer;
@@ -74,7 +75,7 @@ class TmplController extends Controller
             $table_comment_map = $this->getTableCommentMap('tmpls');
             //            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
             $view_data = [
-                'info'       => $this->getInfo(),
+                'info'       => $this->getInfo('index'),
                 'tmpls'      => $tmpls,
                 'list_map'   => $table_comment_map,
                 'search_map' => $table_comment_map,
@@ -84,7 +85,7 @@ class TmplController extends Controller
                     $this->formatter->formatIndex($view_data)
                 );
             }
-            return view('tmpl.index', $view_data);
+            return view('tmpls.index', $view_data);
         } catch (Exception $exception) {
             return [$exception->getMessage(), $exception->getFile(), $exception->getLine()];
         }
@@ -148,13 +149,13 @@ class TmplController extends Controller
     {
         try {
             $view_data = [
-                'info'        => $this->getInfo(),
+                'info'        => $this->getInfo('create'),
                 'js_data'     => [
                     'data' => [],
                 ],
                 'detail_data' => $this->getTableCommentMap('tmpls'),
             ];
-            return view('tmpl.create', $view_data);
+            return view('tmpls.create', $view_data);
         } catch (Exception $exception) {
         }
     }
@@ -172,7 +173,7 @@ class TmplController extends Controller
             $this->validationShowRequest($id);
             $tmpl = $this->service->getIdInfo($id);
             $view_data = [
-                'info'        => $this->getInfo(),
+                'info'        => $this->getInfo('show'),
                 'js_data'     => [
                     'detail_data' => $tmpl,
                 ],
@@ -186,7 +187,7 @@ class TmplController extends Controller
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
                 return $view_data;
             }
-            return view('tmpl.show', $view_data);
+            return view('tmpls.show', $view_data);
         } catch (Exception $exception) {
             return $this->catchException($exception);
         }
@@ -225,7 +226,7 @@ class TmplController extends Controller
                 return $this->successReturn($res_db);
             }
             $view_data = $this->show($request, $id, true);
-            return view('tmpl.show', $view_data);
+            return view('tmpls.show', $view_data);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -282,18 +283,20 @@ class TmplController extends Controller
     public function edit(Request $request, $id)
     {
         $view_data = $this->show($request, $id, true);
-        return view('tmpl.edit', $view_data);
+        return view('tmpls.edit', $view_data);
     }
 
     /**
+     * @param $type
+     *
      * @return array
      */
-    private function getInfo(): array
+    private function getInfo($type): array
     {
         return [
-            'description' => 'xxx',
+            'description' => "tmpl {$type} description",
             'author'      => 'Ben',
-            'title'       => 'index title',
+            'title'       => "tmpl {$type} title",
         ];
     }
 
