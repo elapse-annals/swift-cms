@@ -13,7 +13,8 @@ class ReceptionController extends Controller
      */
     public function index()
     {
-        $data['lists'] = ['lists', 'lists', 'lists'];
+        $data['lists_1'] = ['lists1', 'lists', 'lists'];
+        $data['lists_2'] = ['lists2', 'lists', 'lists'];
         return view('receptions.index', $data);
     }
 

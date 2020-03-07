@@ -1,7 +1,7 @@
 @extends('receptions._layout')
 
 @section('content')
-    <div class="lists">
+    <div class="main">
         @foreach($articles as $article)
             {{$article}}
         @endforeach
