@@ -41,3 +41,6 @@ samples/
 
 # PHP CS
 .php_cs.cache
+
+# Cache
+/public/page-cache
