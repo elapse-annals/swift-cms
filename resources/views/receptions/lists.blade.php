@@ -2,9 +2,20 @@
 
 @section('content')
     <div class="main">
-        @foreach($articles as $article)
-            {{$article}}
-        @endforeach
+        <div class="lists">
+            <div>
+                <h3>
+                    list {{$group_id}}
+                </h3>
+            </div>
+            <div>
+                <ul>
+                    @foreach($articles as $article)
+                        <li><a href="/article/{{$article['id']}}">{{$article['title']}}</a></li>
+                    @endforeach
+                </ul>
+            </div>
+        </div>
     </div>
 @endsection
 

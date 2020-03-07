@@ -6,8 +6,7 @@ use App\Models\Article;
 
 /**
  * Class ArticleRepository
- *
- * @package App\Presenters
+ * @package App\Repositories
  */
 class ArticleRepository extends Repository
 {
@@ -26,10 +25,24 @@ class ArticleRepository extends Repository
     public function getList(array $data = [])
     {
         $Article = new Article();
-        if (!empty($data)) {
+        if (! empty($data)) {
             $Article = $this->assemblyWhere($Article, $data);
         }
         return $Article->orderBy('id')->Paginate($this->per_page);
+    }
+
+    /**
+     * @param int $group_id
+     * @param int $limit
+     *
+     * @return mixed
+     */
+    public function getListForGroupId(int $group_id, int $limit = 10): array
+    {
+        return Article::where('group_id', $group_id)
+            ->limit($limit)
+            ->get()
+            ->toArray();
     }
 
     /**
@@ -40,6 +53,18 @@ class ArticleRepository extends Repository
     public function find($id)
     {
         return Article::find($id);
+    }
+
+    /**
+     * @param int $id
+     *
+     * @return array
+     */
+    public function findWithGroup(int $id): array
+    {
+        return Article::with('articleGroup')
+            ->find($id)
+            ->toArray();
     }
 
     public function create(array $save)
@@ -66,13 +91,16 @@ class ArticleRepository extends Repository
 
     /**
      * @param array $save
+     * @param       $id
      *
-     * @return Article|\Illuminate\Database\Eloquent\Model
+     * @return mixed
      */
     public function update(array $save, $id)
     {
-        $attributes['updated_at'] = $save['updated_at'];
-        return Article::find($id)->update($attributes, $save);
+        $update = Article::where('id', $id)
+            ->where('updated_at', $save['updated_at'])
+            ->update($save);
+        return $update;
     }
 
     /**

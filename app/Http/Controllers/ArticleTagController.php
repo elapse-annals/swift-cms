@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\App;
 use App\Exports\ArticleTagExport;
 use App\Formatters\ArticleTagFormatter;
 use App\Transformers\ArticleTagTransformer;
@@ -67,15 +68,15 @@ class ArticleTagController extends Controller
                 }, $data);
             }
             $this->validationIndexRequest($data);
-            $articletags = $this->service->getList($data);
+            $article_tags = $this->service->getList($data);
             if ($request->is('api/*') || true == $request->input('api')) {
-                return $this->successReturn($articletags, $this->formatter->assemblyPage($articletags));
+                return $this->successReturn($article_tags, $this->formatter->assemblyPage($article_tags));
             }
-            $table_comment_map = $this->getTableCommentMap('articletags');
+            $table_comment_map = $this->getTableCommentMap('article_tags');
             //            $table_comment_map = $this->appendAssociationModelMap($table_comment_map);
             $view_data = [
                 'info'       => $this->getInfo('index'),
-                'articletags'      => $articletags,
+                'article_tags'      => $article_tags,
                 'list_map'   => $table_comment_map,
                 'search_map' => $table_comment_map,
             ];
@@ -84,7 +85,7 @@ class ArticleTagController extends Controller
                     $this->formatter->formatIndex($view_data)
                 );
             }
-            return view('articletag.index', $view_data);
+            return view('article_tags.index', $view_data);
         } catch (Exception $exception) {
             return [$exception->getMessage(), $exception->getFile(), $exception->getLine()];
         }
@@ -152,9 +153,9 @@ class ArticleTagController extends Controller
                 'js_data'     => [
                     'data' => [],
                 ],
-                'detail_data' => $this->getTableCommentMap('articletags'),
+                'detail_data' => $this->getTableCommentMap('article_tags'),
             ];
-            return view('articletag.create', $view_data);
+            return view('article_tags.create', $view_data);
         } catch (Exception $exception) {
         }
     }
@@ -170,13 +171,13 @@ class ArticleTagController extends Controller
     {
         try {
             $this->validationShowRequest($id);
-            $articletag = $this->service->getIdInfo($id);
+            $article_tag = $this->service->getIdInfo($id);
             $view_data = [
                 'info'        => $this->getInfo('show'),
                 'js_data'     => [
-                    'detail_data' => $articletag,
+                    'detail_data' => $article_tag,
                 ],
-                'detail_data' => $this->getTableCommentMap('articletags'),
+                'detail_data' => $this->getTableCommentMap('article_tags'),
             ];
             if ($this->enable_filter) {
                 $view_data = $this->transformer->transformShow(
@@ -186,7 +187,7 @@ class ArticleTagController extends Controller
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
                 return $view_data;
             }
-            return view('articletag.show', $view_data);
+            return view('article_tags.show', $view_data);
         } catch (Exception $exception) {
             return $this->catchException($exception);
         }
@@ -225,7 +226,7 @@ class ArticleTagController extends Controller
                 return $this->successReturn($res_db);
             }
             $view_data = $this->show($request, $id, true);
-            return view('articletag.show', $view_data);
+            return view('article_tags.show', $view_data);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -282,7 +283,7 @@ class ArticleTagController extends Controller
     public function edit(Request $request, $id)
     {
         $view_data = $this->show($request, $id, true);
-        return view('articletag.edit', $view_data);
+        return view('article_tags.edit', $view_data);
     }
 
     /**
@@ -293,9 +294,9 @@ class ArticleTagController extends Controller
     private function getInfo($type): array
     {
         return [
-            'description' => "articletag {$type} description",
+            'description' => "article_tag {$type} description",
             'author'      => 'Ben',
-            'title'       => "articletag {$type} title",
+            'title'       => "article_tag {$type} title",
         ];
     }
 
@@ -313,7 +314,7 @@ class ArticleTagController extends Controller
 
     public function export()
     {
-        $excel_name = 'articletag.xls';
+        $excel_name = 'article_tag.xls';
         return Excel::download(new ArticleTagExport, $excel_name);
     }
 
@@ -328,7 +329,7 @@ class ArticleTagController extends Controller
         return microtime(true) - $act_time;*/
         $act_time = microtime(true);
         for ($i = 1; $i < 10; $i++) {
-            $res = DB::select("SELECT * FROM articletags LIMIT {$i},1;");
+            $res = DB::select("SELECT * FROM article_tags LIMIT {$i},1;");
         }
         return microtime(true) - $act_time;
     }

@@ -2,31 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Services\ReceptionService;
 
 class ReceptionController extends Controller
 {
     /**
-     * Show the application dashboard.
-     *
-     * @return \Illuminate\Contracts\Support\Renderable
+     * ReceptionController constructor.
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->service = new ReceptionService();
+    }
+
+    /**
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index()
     {
-        $data['lists_1'] = ['lists1', 'lists', 'lists'];
-        $data['lists_2'] = ['lists2', 'lists', 'lists'];
+        $data = $this->service->index();
         return view('receptions.index', $data);
     }
 
-    public function lists(Request $request)
+    /**
+     * @param int $group_id
+     *
+     * @return \Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     */
+    public function lists(int $group_id)
     {
-        $data['articles'] = ['articles', 'articles', 'articles'];
+        $data = [
+            'articles' => $this->service->lists($group_id),
+            'group_id' => $group_id,
+        ];
         return view('receptions.lists', $data);
     }
 
-    public function article(Request $request)
+    public function article($article_id)
     {
-        $data['article'] = 'abc';
+        $data['article'] = $this->service->article($article_id);
         return view('receptions.article', $data);
     }
 }

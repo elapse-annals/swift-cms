@@ -12,11 +12,11 @@ use Reliese\Database\Eloquent\Model;
 
 /**
  * Class Article
- * 
- * @property int $id
+ *
+ * @property int    $id
  * @property string $title
  * @property string $content
- * @property int $group_id
+ * @property int    $group_id
  * @property Carbon $created_at
  * @property string $created_by
  * @property Carbon $updated_at
@@ -28,19 +28,25 @@ use Reliese\Database\Eloquent\Model;
  */
 class Article extends Model
 {
-	use SoftDeletes;
-	protected $table = 'articles';
+    use SoftDeletes;
+    protected $table = 'articles';
 
-	protected $casts = [
-		'group_id' => 'int'
-	];
+    protected $casts = [
+        'group_id' => 'int',
+    ];
 
-	protected $fillable = [
-		'title',
-		'content',
-		'group_id',
-		'created_by',
-		'updated_by',
-		'deleted_by'
-	];
+    protected $fillable = [
+        'title',
+        'content',
+        'group_id',
+        'created_by',
+        'updated_by',
+        'deleted_by',
+    ];
+
+    public function articleGroup()
+    {
+        return $this->belongsTo('App\Models\ArticleGroup', 'group_id', 'id')
+            ->withDefault();
+    }
 }

@@ -11,24 +11,24 @@
 |
 */
 
+Auth::routes();
+Route::get('/home', 'HomeController@index')->name('home');
+
 /**
  * Reception
  */
 Route::prefix('/')->group(function () {
     Route::get('/', 'ReceptionController@index');
-    Route::get('/lists/{list_id}', 'ReceptionController@lists');
+    Route::get('/lists/{group_id}', 'ReceptionController@lists');
     Route::get('/article/{article_id}', 'ReceptionController@article');
 });
 
 /**
  * Admin
  */
-Route::middleware(['auth'])->prefix('admin')->group(function () {
+Route::prefix('/')->middleware(['auth'])->group(function () {
+    Route::get('admin', 'AdminController@index');
     Route::resource('articles', 'ArticleController');
-    Route::resource('article-tags', 'ArticleTagController');
+    Route::resource('article_tags', 'ArticleTagController');
+    Route::resource('article_groups', 'ArticleGroupController');
 });
-
-
-Auth::routes();
-
-Route::get('/home', 'HomeController@index')->name('home');

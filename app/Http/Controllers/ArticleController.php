@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Facades\App;
 use App\Exports\ArticleExport;
 use App\Formatters\ArticleFormatter;
 use App\Transformers\ArticleTransformer;
@@ -55,7 +56,7 @@ class ArticleController extends Controller
     /**
      * @param Request $request
      *
-     * @return array|\Illuminate\Contracts\Pagination\LengthAwarePaginator|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
+     * @return array|\Illuminate\Contracts\View\Factory|\Illuminate\View\View
      */
     public function index(Request $request)
     {
@@ -84,7 +85,7 @@ class ArticleController extends Controller
                     $this->formatter->formatIndex($view_data)
                 );
             }
-            return view('article.index', $view_data);
+            return view('articles.index', $view_data);
         } catch (Exception $exception) {
             return [$exception->getMessage(), $exception->getFile(), $exception->getLine()];
         }
@@ -154,7 +155,7 @@ class ArticleController extends Controller
                 ],
                 'detail_data' => $this->getTableCommentMap('articles'),
             ];
-            return view('article.create', $view_data);
+            return view('articles.create', $view_data);
         } catch (Exception $exception) {
         }
     }
@@ -186,7 +187,7 @@ class ArticleController extends Controller
             if ($request->is('api/*') || true == $request->input('api') || $is_edit) {
                 return $view_data;
             }
-            return view('article.show', $view_data);
+            return view('articles.show', $view_data);
         } catch (Exception $exception) {
             return $this->catchException($exception);
         }
@@ -225,7 +226,7 @@ class ArticleController extends Controller
                 return $this->successReturn($res_db);
             }
             $view_data = $this->show($request, $id, true);
-            return view('article.show', $view_data);
+            return view('articles.show', $view_data);
         } catch (Exception $exception) {
             DB::rollBack();
             return $this->catchException($exception, 'api');
@@ -282,7 +283,7 @@ class ArticleController extends Controller
     public function edit(Request $request, $id)
     {
         $view_data = $this->show($request, $id, true);
-        return view('article.edit', $view_data);
+        return view('articles.edit', $view_data);
     }
 
     /**
@@ -317,4 +318,19 @@ class ArticleController extends Controller
         return Excel::download(new ArticleExport, $excel_name);
     }
 
+    public function testQueryDb()
+    {
+//        return 'yoyo';
+        /*$act_time = microtime(true);
+        $sum = 0;
+        for ($i = 1; $i < 100000; $i++) {
+            $sum = $sum * round(0, 1) + $sum;
+        }
+        return microtime(true) - $act_time;*/
+        $act_time = microtime(true);
+        for ($i = 1; $i < 10; $i++) {
+            $res = DB::select("SELECT * FROM articles LIMIT {$i},1;");
+        }
+        return microtime(true) - $act_time;
+    }
 }

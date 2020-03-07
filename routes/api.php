@@ -13,19 +13,7 @@
 
 Route::middleware('auth:api')->get('/user', 'ClosureController@user');
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Route::apiResource('articles', 'ArticleController');
+Route::apiResource('article_tags', 'ArticleTagController');
+Route::apiResource('article_groups', 'ArticleGroupController');
+Route::apiResource('admins', 'AdminController');
