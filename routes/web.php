@@ -14,7 +14,7 @@
 /**
  * Reception
  */
-Route::prefix('admin')->group(function () {
+Route::prefix('/')->group(function () {
     Route::get('/', 'ReceptionController@index');
     Route::get('/lists/{list_id}', 'ReceptionController@lists');
     Route::get('/article/{article_id}', 'ReceptionController@article');

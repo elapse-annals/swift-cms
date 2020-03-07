@@ -13,16 +13,19 @@ class ReceptionController extends Controller
      */
     public function index()
     {
-        return view('index');
+        $data['lists'] = ['lists', 'lists', 'lists'];
+        return view('receptions.index', $data);
     }
 
     public function lists(Request $request)
     {
-        return view('list');
+        $data['articles'] = ['articles', 'articles', 'articles'];
+        return view('receptions.lists', $data);
     }
 
     public function article(Request $request)
     {
-        return view('article');
+        $data['article'] = 'abc';
+        return view('receptions.article', $data);
     }
 }
