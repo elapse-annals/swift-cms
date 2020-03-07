@@ -11,38 +11,20 @@
 |
 */
 
-Auth::routes();
-
-Route::get('/', 'ClosureController@welcome');
-
-Route::get('/home', 'HomeController@index')->name('home');
-
-//Route::get('logs', '\Rap2hpoutre\LaravelLogViewer\LogViewerController@index');
-
-Route::get('plural/{singular}', 'StringController@plural');
-
-Route::prefix('login')->group(function () {
-    Route::get('google', 'Auth\LoginController@redirectToProvider');
-    Route::get('google/callback', 'Auth\LoginController@handleProviderCallback');
+/**
+ * Reception
+ */
+Route::prefix('admin')->group(function () {
+    Route::get('/', 'ReceptionController@index');
+    Route::get('/lists/{list_id}', 'ReceptionController@lists');
+    Route::get('/article/{article_id}', 'ReceptionController@article');
 });
 
 /**
- * Export routing registration
+ * Admin
  */
-Route::prefix('export')->group(function () {
-    Route::get('tmpls', 'TmplController@export');
+Route::middleware(['auth'])->prefix('admin')->group(function () {
+    Route::resource('articles', 'ArticleController');
+    Route::resource('article-tags', 'ArticleTagController');
 });
-
-/**
- * Resource route
- */
-Route::resource('languages', 'LanguageController');
-
-Route::get('testQueryDb', 'TmplController@testQueryDb');
-
-
-
-Route::resource('tmpls', 'TmplController');
-
-
 

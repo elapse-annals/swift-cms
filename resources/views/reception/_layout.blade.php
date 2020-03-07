@@ -1,18 +1,18 @@
 <!doctype html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
-    @include('language._head')
+    @include('reception._head')
 </head>
 <body>
 <div id="app" class="container v-cloak" v-loading.fullscreen.lock="fullscreen_loading">
     <header class="row">
-        @include('language._header')
+        @includeFirst(['reception._header', 'frameworks._header'])
     </header>
     <div id="main" class="row">
         @yield('content')
     </div>
     <footer class="row">
-        @include('language._footer')
+        @includeFirst(['reception._footer', 'frameworks._footer'])
     </footer>
 </div>
 @section('script')

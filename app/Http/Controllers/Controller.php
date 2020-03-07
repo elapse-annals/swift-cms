@@ -27,7 +27,6 @@ class Controller extends BaseController
      */
     protected $service;
 
-
     /**
      *
      */
