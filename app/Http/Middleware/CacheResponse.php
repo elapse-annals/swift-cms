@@ -2,19 +2,21 @@
 
 namespace App\Http\Middleware;
 
-use Closure;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Silber\PageCache\Middleware\CacheResponse as BaseCacheResponse;
 
-class CacheResponse
+class CacheResponse extends BaseCacheResponse
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  \Closure  $next
-     * @return mixed
-     */
-    public function handle($request, Closure $next)
+    protected function shouldCache(Request $request, Response $response)
     {
-        return $next($request);
+        // In this example, we don't ever want to cache pages if the
+        // URL contains a query string. So we first check for it,
+        // then defer back up to the parent's default checks.
+        if ($request->getQueryString()) {
+            return false;
+        }
+
+        return parent::shouldCache($request, $response);
     }
 }

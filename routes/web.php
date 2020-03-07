@@ -17,7 +17,7 @@ Route::get('/home', 'HomeController@index')->name('home');
 /**
  * Reception
  */
-Route::prefix('/')->group(function () {
+Route::prefix('/')->middleware(['page-cache'])->group(function () {
     Route::get('/', 'ReceptionController@index');
     Route::get('/lists/{group_id}', 'ReceptionController@lists');
     Route::get('/article/{article_id}', 'ReceptionController@article');
