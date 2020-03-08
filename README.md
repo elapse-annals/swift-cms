@@ -1,12 +1,7 @@
 主要内容
 index
-list
+lists
 article
-
-内容编辑
--编辑插件
-content edit
--edit plus
 
 后台
 admin
